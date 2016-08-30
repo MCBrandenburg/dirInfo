@@ -7,6 +7,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"hash"
 	"io"
 	"io/ioutil"
 	"os"
@@ -136,7 +137,7 @@ func getFileInfo() ([]FileData, error) {
 		}
 
 		if sha1Enabled {
-			sha1Result, err := getSHA1Hash(path)
+			sha1Result, err := getHash(path, sha1.New())
 			if err != nil {
 				return err
 			}
@@ -144,7 +145,7 @@ func getFileInfo() ([]FileData, error) {
 		}
 
 		if sha256Enabled {
-			sha256Result, err := getSHA256Hash(path)
+			sha256Result, err := getHash(path, sha256.New())
 			if err != nil {
 				return err
 			}
@@ -152,7 +153,7 @@ func getFileInfo() ([]FileData, error) {
 		}
 
 		if md5Enabled {
-			md5Result, err := getMD5Hash(path)
+			md5Result, err := getHash(path, md5.New())
 			if err != nil {
 				return err
 			}
@@ -171,7 +172,7 @@ func getFileInfo() ([]FileData, error) {
 	return directoryFileInfo, err
 }
 
-func getMD5Hash(filePath string) ([]byte, error) {
+func getHash(filePath string, hash hash.Hash) ([]byte, error) {
 	var results []byte
 
 	f, err := os.Open(filePath)
@@ -180,43 +181,6 @@ func getMD5Hash(filePath string) ([]byte, error) {
 	}
 	defer f.Close()
 
-	hash := md5.New()
-	if _, err := io.Copy(hash, f); err != nil {
-		return results, err
-	}
-
-	bytes := hash.Sum(results)
-	return bytes, nil
-}
-
-func getSHA1Hash(filePath string) ([]byte, error) {
-	var results []byte
-
-	f, err := os.Open(filePath)
-	if err != nil {
-		return results, err
-	}
-	defer f.Close()
-
-	hash := sha1.New()
-	if _, err := io.Copy(hash, f); err != nil {
-		return results, err
-	}
-
-	bytes := hash.Sum(results)
-	return bytes, nil
-}
-
-func getSHA256Hash(filePath string) ([]byte, error) {
-	var results []byte
-
-	f, err := os.Open(filePath)
-	if err != nil {
-		return results, err
-	}
-	defer f.Close()
-
-	hash := sha256.New()
 	if _, err := io.Copy(hash, f); err != nil {
 		return results, err
 	}
