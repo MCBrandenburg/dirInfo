@@ -49,7 +49,7 @@ func main() {
 	app := cli.NewApp()
 	app.Name = "Directory Info"
 	app.Usage = "Looks in specified directory or directory executed from to get all file info"
-	app.Version = "0.0.1"
+	app.Version = "0.0.2"
 	app.Flags = []cli.Flag{
 		cli.StringFlag{Name: "path, p", Usage: "Directory to start searching", Destination: &root},
 		cli.BoolFlag{Name: "sha1, s", Usage: "Enable SHA1 hashing of files.", Destination: &sha1Enabled},
