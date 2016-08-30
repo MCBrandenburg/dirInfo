@@ -114,7 +114,15 @@ func getFileInfo() ([]FileData, error) {
 			return nil
 		}
 
-		fd := FileData{FilePath: path, Name: f.Name(), Directory: strings.TrimRight(path, f.Name()), Mode: f.Mode(), Size: f.Size(), MachineName: machineName, Extension: filepath.Ext(f.Name()), LastModified: f.ModTime()}
+		fd := FileData{
+			FilePath:     path,
+			Name:         f.Name(),
+			Directory:    strings.TrimRight(path, f.Name()),
+			Mode:         f.Mode(),
+			Size:         f.Size(),
+			MachineName:  machineName,
+			Extension:    filepath.Ext(f.Name()),
+			LastModified: f.ModTime()}
 
 		if systemInfo {
 			info := f.Sys()
