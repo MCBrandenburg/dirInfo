@@ -47,16 +47,17 @@ func (fd FileData) GetHashForIndex() string {
 	return fd.MD5Hash
 }
 
+var dupEnabled bool
+var systemInfo bool
+var md5Enabled bool
+var note string
 var root string
 var output string
-var md5Enabled bool
-var verbose bool
 var sha1Enabled bool
 var sha256Enabled bool
+var verbose bool
+
 var machineName string
-var note string
-var systemInfo bool
-var dupEnabled bool
 
 func main() {
 
@@ -65,15 +66,15 @@ func main() {
 	app.Usage = "Looks in specified directory or directory executed from to get all file info"
 	app.Version = "0.0.3"
 	app.Flags = []cli.Flag{
+		cli.BoolFlag{Name: "duplicate, d", Usage: "Looks for duplicates. Uses md5 hashing if no other are selected.", Destination: &dupEnabled},
+		cli.BoolFlag{Name: "info,i", Usage: "Get system info data", Destination: &systemInfo},
+		cli.BoolFlag{Name: "md5, m", Usage: "Enable MD5 hashing of files.", Destination: &md5Enabled},
+		cli.StringFlag{Name: "note, n", Usage: "Note that will be attached to the data. Example:  '-n working'", Destination: &note},
 		cli.StringFlag{Name: "path, p", Usage: "Directory to start searching", Destination: &root},
+		cli.StringFlag{Name: "output, o", Usage: "Filename of the output. Example: '-o something'", Destination: &output},
 		cli.BoolFlag{Name: "sha1, s", Usage: "Enable SHA1 hashing of files.", Destination: &sha1Enabled},
 		cli.BoolFlag{Name: "sha256, s2", Usage: "Enable SHA256 hashing of files.", Destination: &sha256Enabled},
-		cli.BoolFlag{Name: "md5, m", Usage: "Enable MD5 hashing of files.", Destination: &md5Enabled},
-		cli.BoolFlag{Name: "info,i", Usage: "Get system info data", Destination: &systemInfo},
-		cli.BoolFlag{Name: "duplicate, d", Usage: "Looks for duplicates. Uses md5 hashing if no other are selected.", Destination: &dupEnabled},
-		cli.StringFlag{Name: "note, n", Usage: "Note that will be attached to the data. Example:  '-n working'", Destination: &note},
 		cli.BoolFlag{Name: "talkative, t", Usage: "Verbose output for each file", Destination: &verbose},
-		cli.StringFlag{Name: "output, o", Usage: "Filename of the output. Example: '-o something'", Destination: &output},
 	}
 	app.Action = func(c *cli.Context) error {
 		startTime := time.Now()
@@ -228,21 +229,21 @@ func getHash(filePath string, hash hash.Hash) ([]byte, error) {
 }
 
 func getListOfDuplicates(fileInfo []FileData) map[string][]string {
-	files := make(map[string][]string)
+	duplicates := make(map[string][]string)
 
 	for _, f := range fileInfo {
 		hash := f.GetHashForIndex()
-		d, ok := files[hash]
+		d, ok := duplicates[hash]
 		if ok {
-			files[hash] = append(d, f.FilePath)
+			duplicates[hash] = append(d, f.FilePath)
 		} else {
-			files[hash] = []string{f.FilePath}
+			duplicates[hash] = []string{f.FilePath}
 		}
 	}
-	duplicates := make(map[string][]string)
-	for index, d := range files {
-		if len(d) > 1 {
-			duplicates[index] = d
+
+	for index, d := range duplicates {
+		if len(d) < 2 {
+			delete(duplicates, index)
 		}
 	}
 
