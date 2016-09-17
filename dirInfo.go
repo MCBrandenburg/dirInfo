@@ -64,7 +64,7 @@ func main() {
 	app := cli.NewApp()
 	app.Name = "Directory Info"
 	app.Usage = "Looks in specified directory or directory executed from to get all file info"
-	app.Version = "0.0.3"
+	app.Version = "0.0.4"
 	app.Flags = []cli.Flag{
 		cli.BoolFlag{Name: "duplicate, d", Usage: "Looks for duplicates. Uses md5 hashing if no other are selected.", Destination: &dupEnabled},
 		cli.BoolFlag{Name: "info,i", Usage: "Get system info data", Destination: &systemInfo},
