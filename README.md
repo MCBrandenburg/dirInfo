@@ -5,6 +5,9 @@ Will go through either CWD or specified directory and al sub-directories outputi
 
 
 ## Commands
+
+**--duplicate, -d** Looks for duplicates. Uses md5 hashing if no hashes are selected.
+
 **--path *value*, -p *value*** Root directory for the process. Defaults to CWD if none specified.
 
 **--info, -i** Get the system info for the file.
