@@ -24,7 +24,7 @@ Will go through either CWD or specified directory and al sub-directories outputi
 
 
 ### Hashing Flags
-  **--sha1, -s** SHA-1 hashing of the file.
+  **--sha1, -s** SHA-1 hashing of the file. *Default*
 
   **--sha256, --s2** SHA-256 hasing of the file.
 

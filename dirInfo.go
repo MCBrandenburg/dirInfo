@@ -36,15 +36,15 @@ type FileData struct {
 }
 
 func (fd FileData) GetHashForIndex() string {
+	if md5Enabled {
+		return fd.MD5Hash
+	}
+
 	if sha256Enabled {
 		return fd.SHA256Hash
 	}
 
-	if sha1Enabled {
-		return fd.SHA1Hash
-	}
-
-	return fd.MD5Hash
+	return fd.SHA1Hash
 }
 
 var dupEnabled bool
@@ -64,9 +64,9 @@ func main() {
 	app := cli.NewApp()
 	app.Name = "Directory Info"
 	app.Usage = "Looks in specified directory or directory executed from to get all file info"
-	app.Version = "0.0.4"
+	app.Version = "0.0.5"
 	app.Flags = []cli.Flag{
-		cli.BoolFlag{Name: "duplicate, d", Usage: "Looks for duplicates. Uses md5 hashing if no other are selected.", Destination: &dupEnabled},
+		cli.BoolFlag{Name: "duplicate, d", Usage: "Looks for duplicates. Uses SHA1 hashing if no other are selected.", Destination: &dupEnabled},
 		cli.BoolFlag{Name: "info,i", Usage: "Get system info data", Destination: &systemInfo},
 		cli.BoolFlag{Name: "md5, m", Usage: "Enable MD5 hashing of files.", Destination: &md5Enabled},
 		cli.StringFlag{Name: "note, n", Usage: "Note that will be attached to the data. Example:  '-n working'", Destination: &note},
@@ -98,8 +98,8 @@ func main() {
 			output = fmt.Sprintf("%s-%s", machineName, "results")
 		}
 
-		if dupEnabled && !(md5Enabled || sha1Enabled || sha256Enabled) {
-			md5Enabled = true
+		if !(md5Enabled || sha256Enabled) {
+			sha1Enabled = true
 		}
 
 		fileInfo, err := getFileInfo()
@@ -202,7 +202,7 @@ func getFileInfo() ([]FileData, error) {
 		directoryFileInfo = append(directoryFileInfo, fd)
 
 		if verbose {
-			fmt.Println(fd.Name, fd.SHA1Hash, fd.MD5Hash, fd.SHA256Hash)
+			fmt.Println(fd.Name, fd.GetHashForIndex())
 		}
 
 		return nil
