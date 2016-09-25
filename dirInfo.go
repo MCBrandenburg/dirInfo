@@ -35,18 +35,6 @@ type FileData struct {
 	DuplicateFilePaths []string    `json:"duplicates,omitempty"`
 }
 
-func (fd FileData) GetHashForIndex() string {
-	if md5Enabled {
-		return fd.MD5Hash
-	}
-
-	if sha256Enabled {
-		return fd.SHA256Hash
-	}
-
-	return fd.SHA1Hash
-}
-
 var dupEnabled bool
 var systemInfo bool
 var md5Enabled bool
@@ -113,7 +101,7 @@ func main() {
 
 			for idx := 0; idx < len(fileInfo); idx++ {
 				f := &fileInfo[idx]
-				dups, ok := files[f.GetHashForIndex()]
+				dups, ok := files[f.getIdentifier()]
 				if ok {
 					for _, dup := range dups {
 						if dup != f.FilePath {
@@ -132,7 +120,8 @@ func main() {
 			return err
 		}
 
-		fmt.Println(fmt.Sprintf("File Read Completed in %s ", time.Since(startTime).String()))
+		fmt.Println(fmt.Sprintf("File Read Completed in %s", time.Since(startTime).String()))
+		fmt.Println(fmt.Sprintf("Found %d items", len(fileInfo)))
 		fmt.Println(fmt.Sprintf("Data written to: %s.json", output))
 		return nil
 
@@ -150,7 +139,7 @@ func getFileInfo() ([]FileData, error) {
 		return directoryFileInfo, err
 	}
 	funkyWalk := func(path string, f os.FileInfo, err error) error {
-		if f.IsDir() {
+		if f.IsDir() || !f.Mode().IsRegular() {
 			return nil
 		}
 
@@ -202,7 +191,7 @@ func getFileInfo() ([]FileData, error) {
 		directoryFileInfo = append(directoryFileInfo, fd)
 
 		if verbose {
-			fmt.Println(fd.Name, fd.GetHashForIndex())
+			fmt.Println(fd.Name, fd.getIdentifier())
 		}
 
 		return nil
@@ -228,11 +217,23 @@ func getHash(filePath string, hash hash.Hash) ([]byte, error) {
 	return bytes, nil
 }
 
+func (fd FileData) getIdentifier() string {
+	if md5Enabled {
+		return fd.MD5Hash
+	}
+
+	if sha256Enabled {
+		return fd.SHA256Hash
+	}
+
+	return fd.SHA1Hash
+}
+
 func getListOfDuplicates(fileInfo []FileData) map[string][]string {
 	duplicates := make(map[string][]string)
 
 	for _, f := range fileInfo {
-		hash := f.GetHashForIndex()
+		hash := f.getIdentifier()
 		d, ok := duplicates[hash]
 		if ok {
 			duplicates[hash] = append(d, f.FilePath)
