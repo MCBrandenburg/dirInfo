@@ -36,6 +36,7 @@ type FileData struct {
 }
 
 var dupEnabled bool
+var noArray bool
 var systemInfo bool
 var md5Enabled bool
 var note string
@@ -52,12 +53,13 @@ func main() {
 	app := cli.NewApp()
 	app.Name = "Directory Info"
 	app.Usage = "Looks in specified directory or directory executed from to get all file info"
-	app.Version = "0.0.6"
+	app.Version = "0.0.7"
 	app.Flags = []cli.Flag{
 		cli.BoolFlag{Name: "duplicate, d", Usage: "Looks for duplicates. Uses SHA1 hashing if no other are selected.", Destination: &dupEnabled},
 		cli.BoolFlag{Name: "info,i", Usage: "Get system info data", Destination: &systemInfo},
 		cli.BoolFlag{Name: "md5, m", Usage: "Enable MD5 hashing of files.", Destination: &md5Enabled},
 		cli.StringFlag{Name: "note, n", Usage: "Note that will be attached to the data. Example:  '-n working'", Destination: &note},
+		cli.BoolFlag{Name: "noArray, na", Usage: "Outputs data in a JSON Array", Destination: &noArray},
 		cli.StringFlag{Name: "path, p", Usage: "Directory to start searching", Destination: &root},
 		cli.StringFlag{Name: "output, o", Usage: "Filename of the output. Example: '-o something'", Destination: &output},
 		cli.BoolFlag{Name: "sha1, s", Usage: "Enable SHA1 hashing of files.", Destination: &sha1Enabled},
@@ -114,7 +116,12 @@ func main() {
 			fmt.Println(fmt.Sprintf("Found %d Duplicate Items", len(files)))
 		}
 
-		err = writeFile(&fileInfo)
+		if noArray {
+			err = writeNoArray(fileInfo)
+		} else {
+			err = writeArray(fileInfo)
+		}
+
 		if err != nil {
 			fmt.Println(err)
 			return err
@@ -251,11 +258,35 @@ func getListOfDuplicates(fileInfo []FileData) map[string][]string {
 	return duplicates
 }
 
-func writeFile(directoryFileInfo *[]FileData) error {
+func writeArray(directoryFileInfo []FileData) error {
 	data, err := json.Marshal(directoryFileInfo)
 	err = ioutil.WriteFile(fmt.Sprintf("%s.json", output), data, 0644)
 	if err != nil {
 		return err
 	}
+	return nil
+}
+
+func writeNoArray(directoryFileInfo []FileData) error {
+	newFile, err := os.Create(fmt.Sprintf("%s.json", output))
+	if err != nil {
+		return err
+	}
+	defer newFile.Close()
+
+	for idx, fd := range directoryFileInfo {
+		if idx != 0 {
+			_, err = newFile.WriteString("\n")
+			if err != nil {
+				return err
+			}
+		}
+		data, err := json.Marshal(fd)
+		_, err = newFile.Write(data)
+		if err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
